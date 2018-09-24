@@ -1,4 +1,5 @@
-from flask import Flask, request
+from flask import Flask, request, redirect
+import cgi
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -23,7 +24,7 @@ def index():
 @app.route("/hello", methods=['POST'])
 def hello():
     first_name = request.form['first_name']
-    return '<h1>Hello, ' + first_name + '</h1>'
+    return '<h1>Hello, ' + cgi.escape(first_name) + '</h1>'
 
 
 time_form = """
@@ -83,12 +84,17 @@ def validate_time():
             minutes = ''
 
     if not minutes_error and not hours_error:
-        # success message
-        return "Success!"
+        time = str(hours) + ':' + str(minutes)
+        return redirect('/valid-time?time={0}'.format(time))
     else:
         return time_form.format(hours_error=hours_error,
         minutes_error=minutes_error,
         hours=hours,
         minutes=minutes)
+
+@app.route('/valid-time')
+def valid_time():
+    time = request.args.get('time')
+    return '<h1>You submitted {0}. Thanks for submitting a valid time.</h1>'.format(time)
 
 app.run()
